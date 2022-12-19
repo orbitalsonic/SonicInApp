@@ -69,10 +69,11 @@ abstract class BillingHelper(private val activity: Activity) {
                 if (isBillingReady) {
                     setBillingState(BillingState.CONNECTION_ESTABLISHED)
                     queryForAvailableProducts()
+                    Handler(Looper.getMainLooper()).post { callback.invoke(true, BillingState.CONNECTION_ESTABLISHED.message) }
                 } else {
                     setBillingState(BillingState.CONNECTION_FAILED)
+                    Handler(Looper.getMainLooper()).post { callback.invoke(false, billingResult.debugMessage) }
                 }
-                Handler(Looper.getMainLooper()).post { callback.invoke(isBillingReady, billingResult.debugMessage) }
             }
         })
     }
