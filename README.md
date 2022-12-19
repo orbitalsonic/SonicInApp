@@ -86,6 +86,10 @@ billingManager.getDebugProductIDList()
 billingManager.getDebugProductIDsList()
 ```
 
+# Acknowledgements
+
+This work has been made possible by contribution from the [Sohaib Ahmed](https://github.com/epegasus).
+
 # LICENSE
 
 Copyright 2023 Engr. Muhammad Yaqoob
