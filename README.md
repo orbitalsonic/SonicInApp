@@ -38,7 +38,7 @@ also declare your original productId
 
 #### Billing Initializaiton
 
-getDebugProductIDList() method get debuging ids for testing
+Get debugging ids for testing using "getDebugProductIDList()" method
 
 ```
  if (BuildConfig.DEBUG) {
@@ -54,7 +54,7 @@ getDebugProductIDList() method get debuging ids for testing
 ```
 #### State Observer
 
-observe the states of establishing connectins
+observe the states of establishing connections
 
 ```
 State.billingState.observe(this) {
