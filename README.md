@@ -52,7 +52,7 @@ Get debugging ids for testing using "getDebugProductIDList()" method
         }
 
 ```
-#### State Observer
+#### Billing State Observer
 
 observe the states of establishing connections
 
