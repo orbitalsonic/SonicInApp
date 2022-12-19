@@ -42,11 +42,12 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
 
     // Google Play Billing
-    implementation "com.android.billingclient:billing-ktx:5.1.0"
+//    implementation "com.android.billingclient:billing-ktx:5.1.0"
 
     // LiveData
-    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.6.0-alpha03"
+//    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.6.0-alpha03"
 
     // SonicInApp Library
-    implementation project(path: ':sonicinapp')
+//    implementation project(path: ':sonicinapp')
+    implementation 'com.github.orbitalsonic:SonicInApp:1.0.1'
 }
