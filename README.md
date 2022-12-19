@@ -27,7 +27,9 @@ Add SonicInApp dependencies in App level build.gradle.
 
 ### Step 3
 
-Declare BillingManger Variable, "this" parameter Must be a reference of an Activity and original product ID
+Declare BillingManger Variable, "this" parameter Must be a reference of an Activity 
+
+also declare your original productId
 
 ```
     private val billingManager by lazy { BillingManager(this) }
@@ -52,7 +54,7 @@ getDebugProductIDList() method get debuging ids for testing
 ```
 #### State Observer
 
-this observe the states of establishing connectins
+observe the states of establishing connectins
 
 ```
 State.billingState.observe(this) {
