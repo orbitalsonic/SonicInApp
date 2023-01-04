@@ -21,7 +21,7 @@ Add maven repository in project level build.gradle or in latest project setting.
 Add SonicInApp dependencies in App level build.gradle.
 ```
     dependencies {
-             implementation 'com.github.orbitalsonic:SonicInApp:1.0.1'
+             implementation 'com.github.orbitalsonic:SonicInApp:1.0.2'
     }
 ```  
 
