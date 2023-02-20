@@ -49,5 +49,5 @@ dependencies {
 
     // SonicInApp Library
 //    implementation project(path: ':sonicinapp')
-    implementation 'com.github.orbitalsonic:SonicInApp:1.0.1'
+    implementation 'com.github.orbitalsonic:SonicInApp:1.0.4'
 }
