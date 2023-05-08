@@ -1,6 +1,8 @@
 package com.orbitalsonic.sonicinapp.helper
-
 import android.app.Activity
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -13,6 +15,7 @@ import com.android.billingclient.api.BillingResult
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
+import com.android.billingclient.api.QueryPurchasesParams
 import com.android.billingclient.api.queryProductDetails
 import com.orbitalsonic.sonicinapp.dataProvider.DataProvider
 import com.orbitalsonic.sonicinapp.enums.BillingState
@@ -24,20 +27,24 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Suppress("unused")
-abstract class BillingHelper(private val activity: Activity) {
+abstract class BillingHelper(private val context: Context) {
 
     private val dpProvider by lazy { DataProvider() }
-    private var callback: ((isPurchased: Boolean, message: String) -> Unit)? = null
+    private var connectionCallback: ((connectionResult: Boolean, alreadyPurchased: Boolean, message: String) -> Unit)? = null
+    private var purchaseCallback: ((isPurchased: Boolean, message: String) -> Unit)? = null
 
     /* ------------------------------------------------ Initializations ------------------------------------------------ */
 
     private val billingClient by lazy {
-        BillingClient.newBuilder(activity).setListener(purchasesUpdatedListener).enablePendingPurchases().build()
+        BillingClient.newBuilder(context).setListener(purchasesUpdatedListener).enablePendingPurchases().build()
     }
 
     /* ------------------------------------------------ Establish Connection ------------------------------------------------ */
 
-    abstract fun startConnection(productIdsList: List<String>, callback: (connectionResult: Boolean, message: String) -> Unit)
+    abstract fun startConnection(productIdsList: List<String>, callback: (connectionResult: Boolean,alreadyPurchased: Boolean, message: String) -> Unit)
+
+    abstract fun startOldPurchaseConnection(productIdsList: List<String>, callback: (connectionResult: Boolean,alreadyPurchased: Boolean, message: String) -> Unit)
+
 
     /**
      *  Get a single testing product_id ("android.test.purchased")
@@ -45,37 +52,116 @@ abstract class BillingHelper(private val activity: Activity) {
     fun getDebugProductIDList() = dpProvider.getDebugProductIDList()
 
     /**
+     *  Get a single testing product_id ("android.test.item_unavailable")
+     */
+    fun getDebugProductIDUnavailableList() = dpProvider.getDebugProductIDUnavailableList()
+
+    /**
      *  Get multiple testing product_ids
      */
     fun getDebugProductIDsList() = dpProvider.getDebugProductIDsList()
 
-    protected fun startBillingConnection(productIdsList: List<String>, callback: (connectionResult: Boolean, message: String) -> Unit) {
+    protected fun startBillingConnection(productIdsList: List<String>, callback: (connectionResult: Boolean, alreadyPurchased: Boolean,message: String) -> Unit) {
+        connectionCallback = callback
         if (productIdsList.isEmpty()) {
             setBillingState(BillingState.EMPTY_PRODUCT_ID_LIST)
-            callback.invoke(false, BillingState.EMPTY_PRODUCT_ID_LIST.message)
+            callback.invoke(false,false, BillingState.EMPTY_PRODUCT_ID_LIST.message)
             return
         }
         dpProvider.setProductIdsList(productIdsList)
+
+        if (!isInternetConnected) {
+            setBillingState(BillingState.NO_INTERNET_CONNECTION)
+            callback.invoke(false,false, BillingState.NO_INTERNET_CONNECTION.message)
+            return
+        }
+
+        setBillingState(BillingState.CONNECTION_ESTABLISHING)
+        if (billingClient.isReady){
+            setBillingState(BillingState.CONNECTION_ESTABLISHED)
+            Handler(Looper.getMainLooper()).post { callback.invoke(true, false,  BillingState.CONNECTION_ESTABLISHED.message) }
+            queryForAvailableProducts()
+        }else{
+            billingClient.startConnection(object : BillingClientStateListener {
+                override fun onBillingServiceDisconnected() {
+                    setBillingState(BillingState.CONNECTION_DISCONNECTED)
+                    Handler(Looper.getMainLooper()).post { callback.invoke(false,false, BillingState.CONNECTION_DISCONNECTED.message) }
+                }
+
+                override fun onBillingSetupFinished(billingResult: BillingResult) {
+                    val isBillingReady = billingResult.responseCode == BillingClient.BillingResponseCode.OK
+                    if (isBillingReady) {
+                        setBillingState(BillingState.CONNECTION_ESTABLISHED)
+                        checkOldPurchases()
+                        Handler(Looper.getMainLooper()).post { callback.invoke(true, false,  BillingState.CONNECTION_ESTABLISHED.message) }
+                    } else {
+                        setBillingState(BillingState.CONNECTION_FAILED)
+                        Handler(Looper.getMainLooper()).post { callback.invoke(false, false, billingResult.debugMessage) }
+                    }
+                }
+            })
+        }
+    }
+
+    protected fun getOldPurchases(productIdsList: List<String>, callback: (connectionResult: Boolean, alreadyPurchased: Boolean,message: String) -> Unit) {
+        connectionCallback = callback
+        if (productIdsList.isEmpty()) {
+            setBillingState(BillingState.EMPTY_PRODUCT_ID_LIST)
+            callback.invoke(false,false, BillingState.EMPTY_PRODUCT_ID_LIST.message)
+            return
+        }
+        dpProvider.setProductIdsList(productIdsList)
+
+        if (!isInternetConnected) {
+            setBillingState(BillingState.NO_INTERNET_CONNECTION)
+            callback.invoke(false,false, BillingState.NO_INTERNET_CONNECTION.message)
+            return
+        }
 
         setBillingState(BillingState.CONNECTION_ESTABLISHING)
         billingClient.startConnection(object : BillingClientStateListener {
             override fun onBillingServiceDisconnected() {
                 setBillingState(BillingState.CONNECTION_DISCONNECTED)
-                Handler(Looper.getMainLooper()).post { callback.invoke(false, BillingState.CONNECTION_DISCONNECTED.message) }
+                Handler(Looper.getMainLooper()).post { callback.invoke(false,false, BillingState.CONNECTION_DISCONNECTED.message) }
             }
 
             override fun onBillingSetupFinished(billingResult: BillingResult) {
                 val isBillingReady = billingResult.responseCode == BillingClient.BillingResponseCode.OK
                 if (isBillingReady) {
                     setBillingState(BillingState.CONNECTION_ESTABLISHED)
-                    queryForAvailableProducts()
-                    Handler(Looper.getMainLooper()).post { callback.invoke(true, BillingState.CONNECTION_ESTABLISHED.message) }
+                    checkOldPurchases()
+                    Handler(Looper.getMainLooper()).post { callback.invoke(true, false,  BillingState.CONNECTION_ESTABLISHED.message) }
                 } else {
                     setBillingState(BillingState.CONNECTION_FAILED)
-                    Handler(Looper.getMainLooper()).post { callback.invoke(false, billingResult.debugMessage) }
+                    Handler(Looper.getMainLooper()).post { callback.invoke(false, false, billingResult.debugMessage) }
                 }
             }
         })
+    }
+
+
+    private fun checkOldPurchases() = CoroutineScope(Dispatchers.Main).launch {
+        setBillingState(BillingState.CONSOLE_OLD_PRODUCTS_FETCHING)
+        val queryPurchasesParams = QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build()
+        billingClient.queryPurchasesAsync(queryPurchasesParams) { _, purchases ->
+            purchases.forEach { purchase ->
+                if (purchase.products.isEmpty()) {
+                    setBillingState(BillingState.CONSOLE_OLD_PRODUCTS_NOT_FOUND)
+                }
+                purchase.products.forEach { product ->
+                    dpProvider.getProductIdsList().forEach {
+                        if (product == it) {
+                            setBillingState(BillingState.CONSOLE_OLD_PRODUCTS_OWNED)
+                            Handler(Looper.getMainLooper()).post { connectionCallback?.invoke(true, true, BillingState.CONSOLE_OLD_PRODUCTS_OWNED.message) }
+                        }
+                    }
+                }
+            }
+            if (purchases.isEmpty()) {
+                setBillingState(BillingState.CONSOLE_OLD_PRODUCTS_NOT_FOUND)
+            }
+            queryForAvailableProducts()
+        }
     }
 
     /* -------------------------------------------- Query available console products  -------------------------------------------- */
@@ -101,14 +187,16 @@ abstract class BillingHelper(private val activity: Activity) {
 
     /* --------------------------------------------------- Make Purchase  --------------------------------------------------- */
 
-    protected fun purchase(callback: (isPurchased: Boolean, message: String) -> Unit) {
-        if (checkValidations(callback)) return
+    protected fun purchase(activity: Activity?, callback: (isPurchased: Boolean, message: String) -> Unit) {
+        this.purchaseCallback = callback
 
-        this.callback = callback
+        if (activity == null) return
+        if (checkValidations(callback)) return
 
         val productDetailsParamsList = listOf(BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(dpProvider.getProductDetail()).build())
 
         val billingFlowParams = BillingFlowParams.newBuilder().setProductDetailsParamsList(productDetailsParamsList).build()
+
 
         // Launch the billing flow
         val billingResult = billingClient.launchBillingFlow(activity, billingFlowParams)
@@ -123,6 +211,15 @@ abstract class BillingHelper(private val activity: Activity) {
 
     private fun checkValidations(callback: (isPurchased: Boolean, message: String) -> Unit): Boolean {
         if (getBillingState() == BillingState.EMPTY_PRODUCT_ID_LIST) {
+            callback.invoke(false, getBillingState().message)
+            return true
+        }
+
+        if (getBillingState() == BillingState.NO_INTERNET_CONNECTION) {
+            if (isInternetConnected && connectionCallback != null) {
+                startBillingConnection(productIdsList = dpProvider.getProductIdsList(), callback = connectionCallback!!)
+                return true
+            }
             callback.invoke(false, getBillingState().message)
             return true
         }
@@ -177,7 +274,7 @@ abstract class BillingHelper(private val activity: Activity) {
             BillingClient.BillingResponseCode.FEATURE_NOT_SUPPORTED -> {}
             BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> {
                 setBillingState(BillingState.PURCHASING_ALREADY_OWNED)
-                callback?.invoke(true, BillingState.PURCHASING_ALREADY_OWNED.message)
+                purchaseCallback?.invoke(true, BillingState.PURCHASING_ALREADY_OWNED.message)
                 return@PurchasesUpdatedListener
             }
 
@@ -187,14 +284,14 @@ abstract class BillingHelper(private val activity: Activity) {
             BillingClient.BillingResponseCode.SERVICE_TIMEOUT -> {}
             BillingClient.BillingResponseCode.USER_CANCELED -> setBillingState(BillingState.PURCHASING_USER_CANCELLED)
         }
-        callback?.invoke(false, getBillingState().message)
+        purchaseCallback?.invoke(false, getBillingState().message)
     }
 
     private fun handlePurchase(purchases: MutableList<Purchase>?) = CoroutineScope(Dispatchers.Main).launch {
         purchases?.forEach { purchase ->
             if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
                 setBillingState(BillingState.PURCHASED_SUCCESSFULLY)
-                callback?.invoke(true, BillingState.PURCHASED_SUCCESSFULLY.message)
+                purchaseCallback?.invoke(true, BillingState.PURCHASED_SUCCESSFULLY.message)
                 if (!purchase.isAcknowledged) {
                     val acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder().setPurchaseToken(purchase.purchaseToken).build()
                     withContext(Dispatchers.IO) {
@@ -208,7 +305,7 @@ abstract class BillingHelper(private val activity: Activity) {
         } ?: kotlin.run {
             setBillingState(BillingState.PURCHASING_USER_CANCELLED)
         }
-        callback?.invoke(false, getBillingState().message)
+        purchaseCallback?.invoke(false, getBillingState().message)
     }
 
     private val acknowledgePurchaseResponseListener = AcknowledgePurchaseResponseListener {
@@ -218,6 +315,26 @@ abstract class BillingHelper(private val activity: Activity) {
             Log.d(TAG, "acknowledgePurchaseResponseListener: Acknowledgment failure")
         }
     }
+
+    /* ------------------------------------- Internet Connection ------------------------------------- */
+
+    private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+    private val isInternetConnected: Boolean
+        get() {
+            try {
+                val network = connectivityManager.activeNetwork ?: return false
+                val networkCapabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+                return when {
+                    networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+                    networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+                    networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
+                    else -> false
+                }
+            } catch (ex: Exception) {
+                return false
+            }
+        }
 
     companion object {
         const val TAG = "BillingManager"

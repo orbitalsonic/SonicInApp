@@ -36,6 +36,10 @@ internal class DataProvider {
         "android.test.purchased"
     )
 
+    fun getDebugProductIDUnavailableList(): List<String> = listOf(
+        "android.test.item_unavailable"
+    )
+
     fun getDebugProductIDsList(): List<String> = listOf(
         "android.test.item_unavailable",
         "android.test.refunded",

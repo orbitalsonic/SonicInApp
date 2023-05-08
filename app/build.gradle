@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId "com.orbitalsonic.sonicinapppurchase"
-        minSdk 21
+        minSdk 23
         targetSdk 33
         versionCode 1
         versionName "1.0"
@@ -48,6 +48,6 @@ dependencies {
 //    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.6.0-alpha03"
 
     // SonicInApp Library
-//    implementation project(path: ':sonicinapp')
-    implementation 'com.github.orbitalsonic:SonicInApp:1.0.4'
+    implementation project(path: ':sonicinapp')
+//    implementation 'com.github.orbitalsonic:SonicInApp:1.2.4'
 }
