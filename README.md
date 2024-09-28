@@ -7,7 +7,8 @@
 
 ### Step 1: Add the Maven Repository
 
-Add the JitPack repository to your project-level **build.gradle** or **settings to include the library in your project.gradle** file:
+Add the JitPack repository to your project-level **build.gradle** or **settings.gradle** to include the library in your project file:
+
 ```
 repositories {
     google()
