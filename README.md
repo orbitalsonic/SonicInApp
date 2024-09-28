@@ -1,13 +1,13 @@
 [![](https://jitpack.io/v/orbitalsonic/SonicInApp.svg)](https://jitpack.io/#orbitalsonic/SonicInApp)
 # SonicInApp
 
-**SonicInApp** is a [Google Play Billing](https://developer.android.com/google/play/billing/integrate) library that demonstrates how to implement in-app purchases and subscriptions in your Android application
+**SonicInApp** is a [Google Play Billing](https://developer.android.com/google/play/billing/integrate) library designed to simplify the integration of in-app purchases and subscriptions in Android applications.
 
-## Gradle Integration
+## Gradle Setup
 
-### Step A: Add Maven Repository
+### Step 1: Add the Maven Repository
 
-In your project-level **build.gradle** or **settings.gradle** file, add the JitPack repository:
+Add the JitPack repository to your project-level **build.gradle** or **settings to include the library in your project.gradle** file:
 ```
 repositories {
     google()
@@ -16,16 +16,19 @@ repositories {
 }
 ```  
 
-### Step B: Add Dependencies
+### Step 2: Add the Dependency
 
 In your app-level **build.gradle** file, add the library dependency. Use the latest version: [![](https://jitpack.io/v/orbitalsonic/SonicInApp.svg)](https://jitpack.io/#orbitalsonic/SonicInApp)
+
+Next, include the library in your app-level **build.gradle** file. Replace x.x.x with the latest version shown below:
+[![](https://jitpack.io/v/orbitalsonic/SonicInApp.svg)](https://jitpack.io/#orbitalsonic/SonicInApp)
 ```
 implementation 'com.github.orbitalsonic:SonicInApp:x.x.x'
 ```
 
-## Technical Implementation
+## Implementation Guide
 
-### Step 1: Initialize Billing
+### 1. Initialize Billing Manager
 
 Initialize the **BillingManager** with the application `context`:
 
@@ -33,9 +36,9 @@ Initialize the **BillingManager** with the application `context`:
 private val billingManager by lazy { BillingManager(context) }
 ```
 
-### Step 2: Establish Billing Connection
+### 2. Establish Billing Connection
 
-Retrieve a debugging ID for testing and ensure the `purchaseDetailList` parameter contains all active purchases and their details:
+Set up the connection and retrieve active purchase details:
 
 ```
 val subsProductIdList = listOf("subs_product_id_1", "subs_product_id_2", "subs_product_id_3")
@@ -70,7 +73,7 @@ billingManager.initialize(
 )
 
 ```
-Access comprehensive details of the currently purchased item using the `PurchaseDetail` class:
+The `PurchaseDetail` class gives detailed information about the purchased items:
 
 ```
 /**
@@ -98,9 +101,9 @@ data class PurchaseDetail(
 )
 ```
 
-### Step 3: Query Product
+### 3. Query Product Details
 
-Monitor all active in-app and subscription products:
+To observe and handle product details for both in-app purchases and subscriptions:
 
 ```
 val subsProductIdList = listOf("subs_product_id_1", "subs_product_id_2", "subs_product_id_3")
@@ -125,7 +128,7 @@ billingManager.productDetailsLiveData.observe(viewLifecycleOwner) { productDetai
     }
 }
 ```
-Retrieve comprehensive details of the item using the `ProductDetail` class:
+The `ProductDetail` class contains detailed information about the products:
 
 ```
 @param productId: Unique ID (Console's ID) for product
@@ -162,9 +165,9 @@ data class ProductDetail(
 )
 ```
 
-### Step 4: Make Purchases
+### 4. Handle Purchases
 
-#### Purchasing In-App Products
+#### In-App Purchases
 
 ```
 billingManager.makeInAppPurchase(activity, productId, object : OnPurchaseListener {
@@ -175,7 +178,7 @@ billingManager.makeInAppPurchase(activity, productId, object : OnPurchaseListene
 
 ```
 
-#### Purchasing Subscriptions
+#### Subscription Purchases
 
 ```
   billingManager.makeSubPurchase(activity,
@@ -218,63 +221,53 @@ billingManager.updateSubPurchase(
                 )
 
 ```
-## Guidance
+## Best Practices for Subscription IDs
 
-### Subscription Tags
+### Option 1: One-to-One Mapping
 
-To add products and plans on the Play Console, consider using the following recommended subscription tags to generate plans.
+For each subscription plan, use unique product and plan IDs:
 
-#### Option 1
+- **Product ID**: `product_id_weekly`
+  - **Plan ID**: `plan_id_weekly`
+- **Product ID**: `product_id_monthly`
+  - **Plan ID**: `plan_id_monthly`
+- **Product ID**: `product_id_yearly`
+  - **Plan ID**: `plan_id_yearly`
 
-##### Note: One-to-One ids
+### Option 2: Multiple Plans per Product
 
-    Product ID: product_id_weekly
-    - Plan ID: plan-id-weekly
-    
-    Product ID: product_id_monthly
-    - Plan ID: plan-id-monthly
-    
-    Product ID: product_id_yearly
-    - Plan ID: plan-id-yearly
+If you're managing multiple plans under one product, store the plan ID on your server for future retrieval. This allows you to identify which plan was purchased.
 
-#### Option 2
+For example:
 
-##### Note: 
-If you purchase a product and want to retrieve an old purchase from Google, it won't return the plan ID, making it impossible to identify which plan was purchased. To address this, you should save the purchase information on your server, including the product and plan IDs. This way, you can maintain a purchase list for future reference. Alternatively, you can use `Option 1`, where each product ID is associated with only one plan ID. This ensures that when you fetch a product ID, you can easily determine the corresponding plan that was purchased
+- **Product ID**: `gold_product`
+  - **Plan ID**: `gold-plan-weekly`
+  - **Plan ID**: `gold-plan-monthly`
+  - **Plan ID**: `gold-plan-yearly`
 
-For Gold Subscription
-
-    Product ID: gold_product
-    - Plan ID: gold-plan-weekly
-    - Plan ID: gold-plan-monthly
-    - Plan ID: gold-plan-yearly
-
-and so on...
-
-### Billing Period (Subscription)
+### Subscription Billing Periods
 
 Fixed billing periods for subscriptions:
 
-    - Weekly
-    - Every 4 weeks
-    - Monthly
-    - Every 2 months (Bimonthly)
-    - Every 3 months (Quarterly)
-    - Every 4 months 
-    - Every 6 months (Semiannually)
-    - Every 8 months
-    - Yearly
+- Weekly
+- Every 4 weeks
+- Monthly
+- Every 2 months (Bimonthly)
+- Every 3 months (Quarterly)
+- Every 4 months
+- Every 6 months (Semiannually)
+- Every 8 months
+- Yearly
 
----
 
 > [!TIP]
 > Note: Use the **BillingManager** tag to observe the states
 
-# Acknowledgements
+## Acknowledgements
 
 This work has been made possible by the contribution of the [Sohaib Ahmed](https://github.com/epegasus).
 
-# LICENSE
+## LICENSE
 
 Copyright 2023 Engr. Muhammad Yaqoob
 
