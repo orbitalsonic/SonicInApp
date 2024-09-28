@@ -234,7 +234,7 @@ For each subscription plan, use unique product and plan IDs:
 
 ### Option 2: Multiple Plans per Product
 
-If you're managing multiple plans under one product, store the plan ID on your server for future retrieval. This allows you to identify which plan was purchased.
+If you're managing multiple plans under one product, store the plan ID on your server for future retrieval because Google did not return those plan IDs. This allows you to identify which plan was purchased.
 
 For example:
 
