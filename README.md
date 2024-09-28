@@ -19,8 +19,6 @@ repositories {
 
 ### Step 2: Add the Dependency
 
-In your app-level **build.gradle** file, add the library dependency. Use the latest version: [![](https://jitpack.io/v/orbitalsonic/SonicInApp.svg)](https://jitpack.io/#orbitalsonic/SonicInApp)
-
 Next, include the library in your app-level **build.gradle** file. Replace x.x.x with the latest version shown below:
 [![](https://jitpack.io/v/orbitalsonic/SonicInApp.svg)](https://jitpack.io/#orbitalsonic/SonicInApp)
 ```
