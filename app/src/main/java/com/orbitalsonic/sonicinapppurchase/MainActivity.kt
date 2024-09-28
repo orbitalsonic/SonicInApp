@@ -3,19 +3,18 @@ package com.orbitalsonic.sonicinapppurchase
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.orbitalsonic.sonicinapp.BillingManager
-import com.orbitalsonic.sonicinapp.status.State
+import com.orbitalsonic.sonicinapp.dataClasses.PurchaseDetail
+import com.orbitalsonic.sonicinapp.interfaces.BillingListener
+import com.orbitalsonic.sonicinapp.interfaces.OnPurchaseListener
 
 class MainActivity : AppCompatActivity() {
 
-    private val billingManager by lazy { BillingManager(this) }
-    private lateinit var tvTitle: TextView
+    val TAG = "TestingTag"
 
-    // mostly people use package name in their
-    private val productId: String = "Paste your original Product ID"
+    private val billingManager by lazy { BillingManager(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,47 +23,75 @@ class MainActivity : AppCompatActivity() {
         initBilling()
         initObserver()
 
-        tvTitle = findViewById(R.id.tv_title)
-        findViewById<Button>(R.id.btn_purchase).setOnClickListener {
-            onPurchaseClick()
+        findViewById<Button>(R.id.btn_purchase).setOnClickListener { onPurchaseClick() }
+    }
+
+    private fun initBilling() {
+        val productInAppConsumable = when (BuildConfig.DEBUG) {
+            true -> listOf("test")
+            false -> listOf("abc", "def")
+        }
+        val productInAppNonConsumable = when (BuildConfig.DEBUG) {
+            true -> listOf(billingManager.getDebugProductIDList())
+            false -> listOf(packageName)
+        }
+
+        billingManager.initialize(
+            productInAppConsumable = productInAppConsumable,
+            productInAppNonConsumable = productInAppNonConsumable,
+            productSubscriptions = listOf("Bronze", "Silver", "Gold"),
+            billingListener = billingListener
+        )
+    }
+
+    private val billingListener = object : BillingListener {
+        override fun onConnectionResult(isSuccess: Boolean, message: String) {
+            Log.d(TAG, "onConnectionResult: isSuccess: $isSuccess, message: $message")
+            if (!isSuccess) {
+                proceedApp()
+            }
+        }
+
+        override fun purchasesResult(purchaseDetailList: List<PurchaseDetail>) {
+            Log.d(TAG, "onConnectionResult: purchaseDetailList: $purchaseDetailList")
+            //purchaseDetailList[0].productType
+            proceedApp()
         }
     }
 
     private fun initObserver() {
-        State.billingState.observe(this) {
-            Log.d("BillingManager", "initObserver: $it")
-            tvTitle.text = it.toString()
-        }
-    }
-
-    private fun initBilling() {
-        if (BuildConfig.DEBUG) {
-            billingManager.startConnection(billingManager.getDebugProductIDUnavailableList()) { isConnectionEstablished, alreadyPurchased, message ->
-                showMessage(message)
-                if (alreadyPurchased) {
-                    // Save settings for purchased product
-                }
-            }
-        } else {
-            billingManager.startConnection(listOf(productId)) { isConnectionEstablished, alreadyPurchased, message ->
-                showMessage(message)
-                if (alreadyPurchased) {
-                    // Save settings for purchased product
-                }
+        billingManager.productDetailsLiveData.observe(this) { productDetailList ->
+            Log.d(TAG, "initNewObserver: --------------------------------------")
+            productDetailList.forEach { productDetail ->
+                Log.d(TAG, "---: $productDetail")
             }
         }
     }
 
+    private fun proceedApp() {
+        // your code here...
+    }
 
     private fun onPurchaseClick() {
+        // In-App
+        billingManager.makeInAppPurchase(this, "test", onPurchaseListener)
 
-        billingManager.makePurchase(this) { isSuccess, message ->
+        // Subscription
+        //billingManager.makeSubPurchase(this, "product_abc", "plan_abc", onPurchaseListener)
+    }
+
+    private val onPurchaseListener = object : OnPurchaseListener {
+        override fun onPurchaseResult(isPurchaseSuccess: Boolean, message: String) {
             showMessage(message)
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        billingManager.destroyBilling()
     }
 
     private fun showMessage(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
-
 }
