@@ -1,4 +1,4 @@
-package com.orbitalsonic.sonicinapp.extensions
+package com.orbitalsonic.sonicinapp.utilities.extensions
 
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -6,7 +6,7 @@ import java.util.Locale
 
 /**
  * @Author: Muhammad Yaqoob
- * @Date: 01,October,2024.
+ * @Date: 18, February 2026
  * @Accounts
  *      -> https://github.com/orbitalsonic
  *      -> https://www.linkedin.com/in/myaqoob7

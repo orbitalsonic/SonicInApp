@@ -5,14 +5,14 @@ plugins {
 
 android {
     namespace 'com.orbitalsonic.sonicinapppurchase'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId "com.orbitalsonic.sonicinapppurchase"
         minSdk 23
-        targetSdk 34
+        targetSdk 35
         versionCode 124
-        versionName "3.124"
+        versionName "3.0.4"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -36,10 +36,10 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.core:core-ktx:1.13.1'
-    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.core:core-ktx:1.16.0'
+    implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation 'com.google.android.material:material:1.12.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
 
     // SonicInApp Library
     implementation project(path: ':sonicinapp')

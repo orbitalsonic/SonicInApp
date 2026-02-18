@@ -1,8 +1,8 @@
-package com.orbitalsonic.sonicinapp.dataClasses
+package com.orbitalsonic.sonicinapp.presentation.enums
 
 /**
  * @Author: Muhammad Yaqoob
- * @Date: 01,October,2024.
+ * @Date: 18, February 2026
  * @Accounts
  *      -> https://github.com/orbitalsonic
  *      -> https://www.linkedin.com/in/myaqoob7
