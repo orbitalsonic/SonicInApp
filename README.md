@@ -309,7 +309,7 @@ Fixed billing periods for subscriptions:
 
 ## Acknowledgements
 
-I would like to express my sincere gratitude to **[Sohaib Ahmed](https://github.com/itssohaibahmed)** for his contributions, guidance, and continuous support during the development of this Android application.
+I would like to express my sincere gratitude to **[Sohaib Ahmed](https://github.com/itssohaibahmed)** for his invaluable guidance, contributions, and continuous support throughout the development of this Android application
 
 
 ## LICENSE
