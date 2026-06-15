@@ -309,7 +309,8 @@ Fixed billing periods for subscriptions:
 
 ## Acknowledgements
 
-This work has been made possible by the contribution of the [Sohaib Ahmed](https://github.com/epegasus).
+I would like to express my sincere gratitude to **[Sohaib Ahmed](https://github.com/itssohaibahmed)** for his contributions, guidance, and continuous support during the development of this Android application.
+
 
 ## LICENSE
 
