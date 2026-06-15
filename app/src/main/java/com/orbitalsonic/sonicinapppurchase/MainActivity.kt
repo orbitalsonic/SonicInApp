@@ -14,7 +14,7 @@ import com.orbitalsonic.sonicinapp.presentation.interfaces.BillingPurchaseListen
 
 class MainActivity : AppCompatActivity() {
 
-    val TAG = "BillingTestTag"
+    val TAG = "BillingTag"
 
     private val billingManager by lazy { BillingManager(this) }
 
