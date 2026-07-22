@@ -48,8 +48,8 @@ internal class UseCaseQueryPurchases(private val repository: BillingRepository) 
                 val inAppAsync = async { repository.queryInAppPurchases() }
                 val subsAsync = async { repository.querySubsPurchases() }
 
-                val inApp = inAppAsync.await()
-                val subs = subsAsync.await()
+                val inApp = inAppAsync.await().filterNot { it.isSuspended }
+                val subs = subsAsync.await().filterNot { it.isSuspended }
 
                 /* ── 2. fetch product details (parallel) ─────────────── */
                 val inAppIds = inApp.flatMap { it.products }

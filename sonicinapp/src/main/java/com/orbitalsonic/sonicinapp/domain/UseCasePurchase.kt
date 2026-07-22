@@ -45,8 +45,7 @@ internal class UseCasePurchase(private val repository: BillingRepository) {
         }
 
         val productDetails = response[0]
-        val offerToken = null
-        //val offerToken = productDetails.oneTimePurchaseOfferDetailsList?.get(0)?.offerToken      // for Billing V8.0.0
+        val offerToken = productDetails.oneTimePurchaseOfferDetailsList?.firstOrNull()?.offerToken
 
         val productDetailsParamsList = listOf(
             when (offerToken != null) {
@@ -156,16 +155,24 @@ internal class UseCasePurchase(private val repository: BillingRepository) {
             return@withContext QueryResponse.Error("Product Details are found")
         }
 
+        val replacementParams = BillingFlowParams.ProductDetailsParams.SubscriptionProductReplacementParams
+            .newBuilder()
+            .setOldProductId(oldProductId)
+            .setReplacementMode(
+                BillingFlowParams.ProductDetailsParams.SubscriptionProductReplacementParams.ReplacementMode.CHARGE_FULL_PRICE
+            )
+            .build()
+
         val productDetailsParamsList = listOf(
             BillingFlowParams.ProductDetailsParams
                 .newBuilder()
                 .setProductDetails(productDetails)
                 .setOfferToken(offerToken)
+                .setSubscriptionProductReplacementParams(replacementParams)
                 .build()
         )
         val productUpdateParams = BillingFlowParams.SubscriptionUpdateParams.newBuilder()
-            .setOldPurchaseToken("old_purchase_token")
-            .setSubscriptionReplacementMode(BillingFlowParams.SubscriptionUpdateParams.ReplacementMode.CHARGE_FULL_PRICE)
+            .setOldPurchaseToken(oldPurchase.purchaseToken)
             .build()
 
         val params = BillingFlowParams.newBuilder()
@@ -183,8 +190,13 @@ internal class UseCasePurchase(private val repository: BillingRepository) {
             repository.currentState = BillingState.PURCHASES_NOT_FOUND
             return@withContext
         }
-        checkForAcknowledgedPurchases(purchases)
-        checkForConsumablePurchases(purchases, consumableIds)
+        val activePurchases = purchases.filterNot { it.isSuspended }
+        if (activePurchases.isEmpty()) {
+            repository.currentState = BillingState.PURCHASES_NOT_FOUND
+            return@withContext
+        }
+        checkForAcknowledgedPurchases(activePurchases)
+        checkForConsumablePurchases(activePurchases, consumableIds)
     }
 
     private suspend fun checkForAcknowledgedPurchases(purchases: List<Purchase>) {

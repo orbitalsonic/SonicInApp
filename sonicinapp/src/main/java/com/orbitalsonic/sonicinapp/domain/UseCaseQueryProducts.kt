@@ -119,24 +119,27 @@ internal class UseCaseQueryProducts(private val repository: BillingRepository) {
 
     /* ─── mapping helpers ─────────────────────────────────── */
 
-    private fun ProductDetails.toDomain(type: ProductType) = ProductDetail(
-        productId = productId,
-        planId = "",
-        productTitle = title,
-        productType = type,
-        pricingDetails = listOf(
-            PricingPhase(
-                recurringMode = RecurringMode.ORIGINAL,
-                price = oneTimePurchaseOfferDetails?.formattedPrice.clean(),
-                currencyCode = oneTimePurchaseOfferDetails?.priceCurrencyCode.orEmpty(),
-                planTitle = "",
-                billingCycleCount = 0,
-                billingPeriod = "",
-                priceAmountMicros = oneTimePurchaseOfferDetails?.priceAmountMicros ?: 0L,
-                freeTrialPeriod = 0
+    private fun ProductDetails.toDomain(type: ProductType): ProductDetail {
+        val offer = oneTimePurchaseOfferDetailsList?.firstOrNull() ?: oneTimePurchaseOfferDetails
+        return ProductDetail(
+            productId = productId,
+            planId = "",
+            productTitle = title,
+            productType = type,
+            pricingDetails = listOf(
+                PricingPhase(
+                    recurringMode = RecurringMode.ORIGINAL,
+                    price = offer?.formattedPrice.clean(),
+                    currencyCode = offer?.priceCurrencyCode.orEmpty(),
+                    planTitle = "",
+                    billingCycleCount = 0,
+                    billingPeriod = "",
+                    priceAmountMicros = offer?.priceAmountMicros ?: 0L,
+                    freeTrialPeriod = 0
+                )
             )
         )
-    )
+    }
 
     /** Subscriptions may contain multiple offers (weekly, monthly, etc.). */
     private fun ProductDetails.toDomainList(): List<ProductDetail> = subscriptionOfferDetails?.map { offer ->

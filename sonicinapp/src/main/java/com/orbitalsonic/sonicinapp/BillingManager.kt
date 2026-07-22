@@ -51,7 +51,7 @@ class BillingManager(
         BillingClient.newBuilder(context)
             .setListener(purchasesUpdatedListener)
             .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
-            //.enableAutoServiceReconnection()      // for Billing v8
+            .enableAutoServiceReconnection()
             .build()
     }
 

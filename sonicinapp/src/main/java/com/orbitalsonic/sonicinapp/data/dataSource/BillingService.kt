@@ -79,7 +79,10 @@ internal class BillingService(private val billingClient: BillingClient) {
     suspend fun querySubsPurchases(): List<Purchase> {
         currentState = BillingState.FETCHING_SUBSCRIPTION_PURCHASES
 
-        val params = QueryPurchasesParams.newBuilder().setProductType(subs).build()
+        val params = QueryPurchasesParams.newBuilder()
+            .setProductType(subs)
+            .includeSuspendedSubscriptions(true)
+            .build()
         val result = billingClient.queryPurchasesAsync(params)
 
         currentState = when (BillingResponse(result.billingResult.responseCode).isOk) {
