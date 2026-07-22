@@ -1,6 +1,10 @@
 plugins {
     id 'com.android.library'
+    id 'maven-publish'
 }
+
+group = project.findProperty('group') ?: 'com.github.orbitalsonic'
+version = project.findProperty('version') ?: 'unspecified'
 
 android {
     namespace 'com.orbitalsonic.sonicinapp'
@@ -26,6 +30,24 @@ android {
     kotlin {
         compilerOptions {
             jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+        }
+    }
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+        }
+    }
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                groupId = project.group
+                artifactId = 'SonicInApp'
+                version = project.version
+            }
         }
     }
 }
