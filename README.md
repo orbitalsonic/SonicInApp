@@ -21,7 +21,7 @@ repositories {
 
 Next, include the library in your app-level **build.gradle** file. Replace x.x.x with the latest version [![](https://jitpack.io/v/orbitalsonic/SonicInApp.svg)](https://jitpack.io/#orbitalsonic/SonicInApp)
 ```
-implementation 'com.github.orbitalsonic:SonicInApp:3.1.4'
+implementation 'com.github.orbitalsonic:SonicInApp:3.2.6'
 ```
 
 ## Technical Implementation
